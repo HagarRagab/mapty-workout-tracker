@@ -108,33 +108,6 @@ class App {
     document.querySelector('.leaflet-control-attribution').remove();
   }
 
-  _calcDistance(lat1, lng1, lat2, lng2) {
-    // Converts an angle in degrees to radians.
-    // Formula: radians = (degrees * 𝜋) / 180
-    function toRad(value) {
-      return (value * Math.PI) / 180;
-    }
-
-    // Radius of the Earth (in kilometers, approximately 6371 km)
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lng2 - lng1);
-    const l1 = toRad(lat1);
-    const l2 = toRad(lat2);
-
-    // Haversine Formula -> calculates a "chord length" between the two points
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(l1) * Math.cos(l2);
-
-    // Compute the Central Angle -> c is angular distance in radians between the two points.
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    // Calculate the great-circle distance
-    const d = R * c;
-    return d;
-  }
-
   //? FORM METHODS
   _showForm() {
     // Disable map clicking
@@ -592,7 +565,7 @@ class Workout {
       };
 
       const fetchData = fetch(
-        `https://api.geoapify.com/v1/geocode/reverse?lat=${this.coords[0][0]}&lon=${this.coords[0][1]}&format=json&apiKey=d080cc362adb4e2994812b78a6d725e5`
+        `${CONFIG.BASE_URL}?lat=${this.coords[0][0]}&lon=${this.coords[0][1]}&format=json&apiKey=${CONFIG.API_KEY}`
       );
       const resGeo = await Promise.race([fetchData, timeout(this.#timeout)]);
       if (!resGeo.ok) throw new Error('Cannot find the country');

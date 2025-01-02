@@ -565,7 +565,7 @@ class Workout {
       };
 
       const fetchData = fetch(
-        `${CONFIG.BASE_URL}?lat=${this.coords[0][0]}&lon=${this.coords[0][1]}&format=json&apiKey=${CONFIG.API_KEY}`
+        `https://api.geoapify.com/v1/geocode/reverse?lat=${this.coords[0][0]}&lon=${this.coords[0][1]}&format=json&apiKey=d080cc362adb4e2994812b78a6d725e5`
       );
       const resGeo = await Promise.race([fetchData, timeout(this.#timeout)]);
       if (!resGeo.ok) throw new Error('Cannot find the country');

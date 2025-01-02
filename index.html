@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="shortcut icon" type="image/png" href="./images/icon.png" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="./node_modules/leaflet/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script defer src="./node_modules/leaflet/dist/leaflet.js"></script>
+
+    <!-- Font awesome -->
+    <script
+      src="https://kit.fontawesome.com/fa997c3f4b.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="./script.js"></script>
+    <title>mapty // Map your workouts</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <img src="./images/logo.png" alt="Logo" class="logo" />
+
+        <ul class="workouts">
+          <!-- START SORT -->
+          <div class="workouts__sort-container">
+            <label for="workouts-sort" class="label workouts__sort-label"
+              >sort by</label
+            >
+            <select id="workouts-sort" class="input workouts__sort">
+              <option value="date">date</option>
+              <option value="distance">distance</option>
+              <option value="duration">duration</option>
+            </select>
+          </div>
+          <!-- END SORT -->
+
+          <!-- START SPINNER -->
+          <div class="spinner hidden"></div>
+          <!-- END SPINNER -->
+
+          <!-- START FORM -->
+          <form class="form hidden">
+            <div class="form__error-msg">Please add correct numbers</div>
+            <div class="form__row">
+              <label class="label form__label">type</label>
+              <select class="input form__input form__input--type" name="type">
+                <option value="running">Running</option>
+                <option value="cycling">Cycling</option>
+              </select>
+            </div>
+            <div class="form__row">
+              <label class="label form__label">distance</label>
+              <input
+                class="input form__input form__input--distance"
+                placeholder="km"
+                name="distance"
+              />
+            </div>
+            <div class="form__row">
+              <label class="label form__label">duration</label>
+              <input
+                class="input form__input form__input--duration"
+                placeholder="min"
+                name="duration"
+              />
+            </div>
+            <div class="form__row">
+              <label class="label form__label">cadence</label>
+              <input
+                class="input form__input form__input--cadence"
+                placeholder="step/min"
+                name="cadence"
+              />
+            </div>
+            <div class="form__row form__row--hidden">
+              <label class="label form__label">elev gain</label>
+              <input
+                class="input form__input form__input--elevation"
+                placeholder="meters"
+                name="elevationGain"
+              />
+            </div>
+            <!-- <div class="form__row">
+              <label class="label form__label">date</label>
+              <input
+                type="date"
+                class="input form__input form__input--date"
+                name="date"
+              />
+            </div> -->
+            <button class="form__btn">OK</button>
+          </form>
+          <!-- END FORM -->
+
+          <!-- START CLEAR, SHOW ALL BUTTONS -->
+          <div class="workouts__all-btns">
+            <button class="all-btn clear-all hidden">clear all</button>
+            <button
+              class="all-btn show-all hidden"
+              title="Click here to display all workouts on the map on the same screen"
+            >
+              show all
+            </button>
+          </div>
+          <!-- END CLEAR, SHOW ALL BUTTONS -->
+        </ul>
+      </div>
+
+      <div id="map"></div>
+    </div>
+
+    <!-- START MODAL -->
+    <div class="modal hidden">
+      <div class="modal__overlay"></div>
+      <div class="modal__content">
+        <button class="modal__close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <p class="modal__text">You are almost to remove workout are you sure</p>
+        <div class="modal__confirm">
+          <button class="modal__confirm--yes">Yes</button>
+          <button class="modal__confirm--no">No</button>
+        </div>
+      </div>
+    </div>
+    <!-- END MODAL -->
+  </body>
+</html>

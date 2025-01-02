@@ -177,6 +177,7 @@ button {
   height: 77vh;
   overflow-y: scroll;
   overflow-x: hidden;
+  padding-top: 3rem;
 }
 
 .workouts::-webkit-scrollbar {

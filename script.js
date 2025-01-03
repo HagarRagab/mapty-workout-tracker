@@ -31,6 +31,7 @@ class App {
   #formData = {};
   #edit = null;
   #boundMapClickCallback;
+  #boundKeydownCallback;
 
   constructor() {
     this._getPosition();
@@ -68,6 +69,9 @@ class App {
     // Enable map clicking
     this.#boundMapClickCallback = this._mapClickCallback.bind(this);
     this.#map.on('click', this.#boundMapClickCallback);
+
+    // Remove previous keydown event
+    document.removeEventListener('keydown', this.#boundKeydownCallback);
   }
 
   _getPosition() {
@@ -122,14 +126,12 @@ class App {
         input.value = '';
       });
 
-      const that = this;
       function keyEventsCallback(e) {
-        if (e.key === 'Escape') that._init();
-        if (e.key === 'Enter') form.requestSubmit();
-        document.removeEventListener('keydown', keyEventsCallback);
+        if (e.key === 'Escape') this._init();
       }
 
-      document.addEventListener('keydown', keyEventsCallback);
+      this.#boundKeydownCallback = keyEventsCallback.bind(this);
+      document.addEventListener('keydown', this.#boundKeydownCallback);
     }
   }
 
@@ -154,6 +156,7 @@ class App {
 
   _isInputsPositiveNumbers(data) {
     if (!data || typeof data !== 'object') return false;
+
     const positiveNumericInputs = Object.entries(data)
       .filter(([key]) => key !== 'type' && key !== 'elevation')
       .map(input => input[1]);
@@ -180,34 +183,13 @@ class App {
     }
   }
 
-  _formDataValidation(coords) {
-    if (this.#formData.type === 'running') {
-      if (this._isInputsPositiveNumbers(this.#formData)) {
-        errorMsgEle.classList.remove('display');
-
-        return new Running(
-          this.#formData.distance,
-          this.#formData.duration,
-          coords,
-          this.#formData.cadence
-        );
-      } else {
-        errorMsgEle.classList.add('display');
-      }
-    }
-    if (this.#formData.type === 'cycling') {
-      if (this._isInputsPositiveNumbers(this.#formData)) {
-        errorMsgEle.classList.remove('display');
-
-        return new Cycling(
-          this.#formData.distance,
-          this.#formData.duration,
-          coords,
-          this.#formData.elevation
-        );
-      } else {
-        errorMsgEle.classList.add('display');
-      }
+  _formDataValidation() {
+    if (this._isInputsPositiveNumbers(this.#formData)) {
+      errorMsgEle.classList.remove('display');
+      return true;
+    } else {
+      errorMsgEle.classList.add('display');
+      return false;
     }
   }
 
@@ -225,7 +207,25 @@ class App {
       mapEvent.latlng.lng,
     ]);
 
-    const workout = this._formDataValidation(coords);
+    let workout;
+    if (!this._formDataValidation()) return;
+
+    if (this.#formData.type === 'running') {
+      workout = new Running(
+        this.#formData.distance,
+        this.#formData.duration,
+        coords,
+        this.#formData.cadence
+      );
+    } else {
+      workout = new Cycling(
+        this.#formData.distance,
+        this.#formData.duration,
+        coords,
+        this.#formData.elevation
+      );
+    }
+
     if (!workout) return;
 
     // Render workout marker
@@ -243,7 +243,6 @@ class App {
     // Handle clear, show, sort buttons
     this._displayHideBtns(clearAll, showAll, sortByContainer);
 
-    // Reset form
     this._init();
   }
 
@@ -318,17 +317,12 @@ class App {
     const modifiedWorkout = this.#workouts.find(
       workout => workout.id === modifiedEle.dataset.id
     );
-    const modifiedWorkoutIndex = this.#workouts.findIndex(
-      workout => workout.id === modifiedEle.dataset.id
-    );
 
-    // Enter edit mode
+    // Activate edit mode
     this.#edit = modifiedEle;
 
     // Disable sorting
     sortBy.disabled = true;
-
-    let newWorkout;
 
     // Hide modified workout and display form to edit it
     modifiedEle.classList.add('hidden');
@@ -341,44 +335,52 @@ class App {
     });
     this._toggleElevationField();
 
-    // Handle clicking escape key
-    const that = this;
+    // Handle keydown event
     function keyEventCallback(e) {
-      if (!that.#edit) return;
+      console.log(e);
+      if (!this.#edit) return;
       if (e.key === 'Escape') {
         modifiedEle.classList.remove('hidden');
-        that._init();
-        document.removeEventListener('keydown', keyEventCallback);
+        this._init();
       }
       if (e.key === 'Enter') {
         // Get data from the form
-        that._collectFormData();
+        this._collectFormData();
 
-        // Check form data and initiate instances
-        newWorkout = that._formDataValidation(modifiedWorkout.coords);
-        if (!newWorkout) return;
+        // Check form data and update workout object
+        if (!this._formDataValidation()) return;
 
-        // Delete workout from workouts array
-        that.#workouts[modifiedWorkoutIndex] = newWorkout;
-        that._sort();
+        for (const key in this.#formData)
+          modifiedWorkout[key] = this.#formData[key];
 
+        if (this.#formData.type === 'running')
+          modifiedWorkout.pace =
+            modifiedWorkout.duration / modifiedWorkout.distance;
+        else
+          modifiedWorkout.speed =
+            modifiedWorkout.distance / (modifiedWorkout.duration / 60);
+
+        this._sort();
         // Delete workout from local storage
-        that._clearLocalStorage();
-        that._setLocalStorage();
+        this._clearLocalStorage();
+        this._setLocalStorage();
 
-        that._init();
-        document.removeEventListener('keydown', keyEventCallback);
+        this._init();
       }
     }
-    document.addEventListener('keydown', keyEventCallback);
+
+    this.#boundKeydownCallback = keyEventCallback.bind(this);
+    document.addEventListener('keydown', this.#boundKeydownCallback);
   }
 
   _deleteWorkout(e) {
     // Find workout and marker by id
     const deletedWorkoutEle = e.target.closest('.workout');
+    console.log(deletedWorkoutEle);
     const deletedWorkoutMarker = this.#markers.find(
       marker => marker.id === deletedWorkoutEle.dataset.id
     );
+    console.log(this.#markers);
     const deletedWorkoutIndex = this.#workouts.findIndex(
       workout => workout.id === deletedWorkoutEle.dataset.id
     );

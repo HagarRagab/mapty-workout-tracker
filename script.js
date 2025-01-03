@@ -250,12 +250,12 @@ class App {
     const marker = L.marker(workout.coords[0], {
       icon: L.icon({
         iconUrl: './images/icon.png',
-        iconSize: [45, 45],
+        iconSize: [40, 40],
         iconAnchor: [22, 50],
         popupAnchor: [0, -48],
-        shadowUrl: './node_modules/leaflet/dist/images/marker-shadow.png',
-        shadowSize: [41, 41],
-        shadowAnchor: [12, 46],
+        shadowUrl: './assets/images/marker-shadow.png',
+        shadowSize: [40, 40],
+        shadowAnchor: [14, 46],
       }),
     })
       .addTo(this.#map)

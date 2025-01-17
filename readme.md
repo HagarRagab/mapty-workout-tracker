@@ -1,8 +1,18 @@
 # Mapty: Workout Tracker
 
-![alt text](images/908031d2-2550-43ae-a639-8e47660fe6fd.jpg)
+## Table of Contents
+
+-   [Description](#description)
+-   [Key Features](#key-features)
+-   [Technical Architecture](#technical-architecture)
+-   [Tech Stack](#tech-stack)
 
 **Live demo** [click here](https://mapty-application-workout.netlify.app/)
+
+---
+
+![alt text](images/908031d2-2550-43ae-a639-8e47660fe6fd.jpg)
+
 
 > ### Description:
 

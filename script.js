@@ -16,6 +16,9 @@ const errorMsgEle = document.querySelector('.form__error-msg');
 const spinner = document.querySelector('.spinner');
 const workoutsControllers = document.querySelector('.workouts__all-btns');
 
+const toast = document.querySelector('.toast');
+const toastMessage = document.querySelector('.toast__message');
+
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.modal__overlay');
 const modalConfirm = document.querySelector('.modal__confirm');
@@ -69,28 +72,44 @@ class App {
     // Enable map clicking
     this.#boundMapClickCallback = this._mapClickCallback.bind(this);
     this.#map.on('click', this.#boundMapClickCallback);
+    this._showToast('Click the map to select the trip start point.');
 
     // Remove previous keydown event
     document.removeEventListener('keydown', this.#boundKeydownCallback);
   }
 
   _getPosition() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        // Success callback function
-        this._loadMap.bind(this),
-        // Failure callback function
-        function (positionError) {
-          console.log(positionError.message);
-        }
-      );
-    }
+    const loadFallbackMap = positionError => {
+      if (positionError) console.log(positionError.message);
+
+      this._loadMap({
+        coords: {
+          latitude: 30.0444,
+          longitude: 31.2357,
+        },
+      });
+    };
+
+    if (!navigator.geolocation) return loadFallbackMap();
+
+    navigator.geolocation.getCurrentPosition(
+      // Success callback function
+      this._loadMap.bind(this),
+      // Failure callback function
+      loadFallbackMap,
+    );
   }
 
   _mapClickCallback(mapE) {
     this.#mapEvents.push(mapE);
+    if (this.#mapEvents.length === 1) {
+      this._showToast('Click the map again to select the trip end point.');
+      return;
+    }
+
     if (this.#mapEvents.length === 2) {
       this.#edit = null;
+      this._hideToast();
       this._showForm();
     }
   }
@@ -110,12 +129,23 @@ class App {
     this.#workouts.forEach(workout => this._renderWorkoutMarker(workout));
 
     document.querySelector('.leaflet-control-attribution').remove();
+    this._showToast('Click the map to select the trip start point.');
+  }
+
+  _showToast(message) {
+    toastMessage.textContent = message;
+    toast.classList.remove('hidden');
+  }
+
+  _hideToast() {
+    toast.classList.add('hidden');
   }
 
   //? FORM METHODS
   _showForm() {
     // Disable map clicking
     this.#map.off('click', this.#boundMapClickCallback);
+    this._hideToast();
 
     form.classList.remove('hidden');
     inputDistance.focus();
@@ -162,7 +192,7 @@ class App {
       .map(input => input[1]);
 
     const areInputsPositiveNumbers = positiveNumericInputs.every(
-      input => Number.isFinite(input) && input > 0
+      input => Number.isFinite(input) && input > 0,
     );
 
     if (data.type === 'cycling')
@@ -215,14 +245,14 @@ class App {
         this.#formData.distance,
         this.#formData.duration,
         coords,
-        this.#formData.cadence
+        this.#formData.cadence,
       );
     } else {
       workout = new Cycling(
         this.#formData.distance,
         this.#formData.duration,
         coords,
-        this.#formData.elevation
+        this.#formData.elevation,
       );
     }
 
@@ -269,15 +299,15 @@ class App {
         }).setContent(
           `${workout.type === 'running' ? '🏃‍♂️' : '🚴‍♂️'} ${await Promise.all([
             workout._workoutTitle(),
-          ])}`
-        )
+          ])}`,
+        ),
       )
       .openPopup();
 
     // Create polyline and add it to the map
     const polyline = L.polyline(workout.coords, {
       color: getComputedStyle(document.documentElement).getPropertyValue(
-        '--color-brand--1'
+        '--color-brand--1',
       ),
       weight: 5,
       lineCap: 'round',
@@ -293,7 +323,7 @@ class App {
     const workoutEle = e.target.closest('.workout');
     if (e.target.closest('.workout__icons')) return;
     const clickedWorkout = this.#workouts.find(
-      workout => workout.id === workoutEle.dataset.id
+      workout => workout.id === workoutEle.dataset.id,
     );
     this.#map.flyTo(clickedWorkout.coords[0]);
   }
@@ -303,7 +333,7 @@ class App {
     buttons.forEach(btn =>
       this.#workouts.length
         ? btn.classList.remove('hidden')
-        : btn.classList.add('hidden')
+        : btn.classList.add('hidden'),
     );
   }
 
@@ -315,7 +345,7 @@ class App {
 
     const modifiedEle = e.target.closest('.workout');
     const modifiedWorkout = this.#workouts.find(
-      workout => workout.id === modifiedEle.dataset.id
+      workout => workout.id === modifiedEle.dataset.id,
     );
 
     // Activate edit mode
@@ -378,11 +408,11 @@ class App {
     const deletedWorkoutEle = e.target.closest('.workout');
     console.log(deletedWorkoutEle);
     const deletedWorkoutMarker = this.#markers.find(
-      marker => marker.id === deletedWorkoutEle.dataset.id
+      marker => marker.id === deletedWorkoutEle.dataset.id,
     );
     console.log(this.#markers);
     const deletedWorkoutIndex = this.#workouts.findIndex(
-      workout => workout.id === deletedWorkoutEle.dataset.id
+      workout => workout.id === deletedWorkoutEle.dataset.id,
     );
     this._displayModal();
     modal.addEventListener(
@@ -414,7 +444,7 @@ class App {
       },
       {
         once: true,
-      }
+      },
     );
   }
 
@@ -431,7 +461,7 @@ class App {
 
     // Fetching all workouts titles
     const workoutsTitles = await Promise.all(
-      sortedWorkouts.map(workout => workout._workoutTitle())
+      sortedWorkouts.map(workout => workout._workoutTitle()),
     );
 
     // Store resolved title in workout
@@ -473,7 +503,7 @@ class App {
           this._hideModal();
         }
       },
-      { once: true }
+      { once: true },
     );
   }
 
@@ -511,14 +541,14 @@ class App {
           workout.distance,
           workout.duration,
           workout.coords,
-          workout.cadence
+          workout.cadence,
         );
       if (workout.type === 'cycling')
         return new Cycling(
           workout.distance,
           workout.duration,
           workout.coords,
-          workout.elevationGain
+          workout.elevationGain,
         );
     });
 
@@ -567,7 +597,7 @@ class Workout {
       };
 
       const fetchData = fetch(
-        `https://api.geoapify.com/v1/geocode/reverse?lat=${this.coords[0][0]}&lon=${this.coords[0][1]}&format=json&apiKey=d080cc362adb4e2994812b78a6d725e5`
+        `https://api.geoapify.com/v1/geocode/reverse?lat=${this.coords[0][0]}&lon=${this.coords[0][1]}&format=json&apiKey=d080cc362adb4e2994812b78a6d725e5`,
       );
       const resGeo = await Promise.race([fetchData, timeout(this.#timeout)]);
       if (!resGeo.ok) throw new Error('Cannot find the country');
@@ -576,7 +606,7 @@ class Workout {
 
       return `${this.type.replace(
         this.type[0],
-        this.type[0].toUpperCase()
+        this.type[0].toUpperCase(),
       )} in ${street || ''}, ${state || ''}`;
     } catch (err) {
       console.error(err);
